@@ -1,24 +1,19 @@
 using BotOneOne.OneBot11.Connectivity;
 using BotOneOne.OneBot11.Transfer.Dto;
+using BotOneOne.OneBot11.Transfer.Packet;
 using Newtonsoft.Json;
 
 namespace BotOneOne.OneBot11;
 
-public abstract class BaseOneBot11Context : BotContext
+public abstract class BaseOneBot11Context(IConnectionSource connectionSource, OneBot11Options? options)
+    : BotContext
 {
-    private readonly IConnectionSource _connectionSource;
-    private readonly OneBot11Options _options;
-    private readonly Dictionary<string, TaskCompletionSource<ActionResponseDto>> _pendingRequests = [];
+    private readonly OneBot11Options _options = options ?? OneBot11Options.Default;
+    private readonly Dictionary<string, TaskCompletionSource<ActionResponsePacket>> _pendingRequests = [];
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
 
     public override bool IsOpened => _workerTask != null;
-
-    protected BaseOneBot11Context(IConnectionSource connectionSource, OneBot11Options? options)
-    {
-        _connectionSource = connectionSource;
-        _options = options ?? OneBot11Options.Default;
-    }
 
     public override void Open()
     {
@@ -39,7 +34,7 @@ public abstract class BaseOneBot11Context : BotContext
 
     private void HandleActionResponse(string packet)
     {
-        var actionResponse = JsonConvert.DeserializeObject<ActionResponseDto>(packet);
+        var actionResponse = JsonConvert.DeserializeObject<ActionResponsePacket>(packet);
         if (actionResponse?.Echo == null)
         {
             return;
@@ -60,8 +55,8 @@ public abstract class BaseOneBot11Context : BotContext
         {
             try
             {
-                var packet = await _connectionSource.ReceiveTextAsync(cancellationToken);
-                var baseResponse = JsonConvert.DeserializeObject<BaseImcomingDto>(packet);
+                var packet = await connectionSource.ReceiveTextAsync(cancellationToken);
+                var baseResponse = JsonConvert.DeserializeObject<BaseIncomingPacket>(packet);
 
                 if (baseResponse == null)
                 {
@@ -84,20 +79,20 @@ public abstract class BaseOneBot11Context : BotContext
         }
     }
 
-    private async ValueTask<ActionResponseDto> InvokeActionInternal(ActionRequestDto requestDto,
+    private async ValueTask<ActionResponsePacket> InvokeActionInternal(ActionRequestPacket requestPacket,
         CancellationToken cancellationToken)
     {
         var packetEcho = Guid.NewGuid().ToString();
-        requestDto.Echo = packetEcho;
+        requestPacket.Echo = packetEcho;
 
         // prepare for receive
-        var taskCompletionSource = new TaskCompletionSource<ActionResponseDto>();
+        var taskCompletionSource = new TaskCompletionSource<ActionResponsePacket>();
         _pendingRequests.Add(packetEcho, taskCompletionSource);
         cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(), false);
 
         // send action packet
-        await _connectionSource.SendTextAsync(
-            JsonConvert.SerializeObject(requestDto), cancellationToken);
+        await connectionSource.SendTextAsync(
+            JsonConvert.SerializeObject(requestPacket), cancellationToken);
 
         try
         {
@@ -119,7 +114,7 @@ public abstract class BaseOneBot11Context : BotContext
     {
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(_options.InvocationTimeout);
-        await InvokeActionInternal(new ActionRequestDto<T>
+        await InvokeActionInternal(new ActionRequestPacket<T>
         {
             Action = actionName,
             Params = parameters
@@ -133,7 +128,7 @@ public abstract class BaseOneBot11Context : BotContext
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.CancelAfter(_options.InvocationTimeout);
 
-        var response = await InvokeActionInternal(new ActionRequestDto<TParam>
+        var response = await InvokeActionInternal(new ActionRequestPacket<TParam>
         {
             Action = actionName,
             Params = parameters

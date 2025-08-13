@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BotOneOne.OneBot11.Transfer.Dto;
+namespace BotOneOne.OneBot11.Transfer.Packet;
 
-public class ActionResponseDto
+public class ActionResponsePacket
 {
     [JsonProperty("status")] public string Status { get; set; } = "failed";
     [JsonProperty("retcode")] public int ReturnCode { get; set; }

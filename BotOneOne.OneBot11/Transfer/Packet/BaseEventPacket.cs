@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 
-namespace BotOneOne.OneBot11.Transfer.Dto;
+namespace BotOneOne.OneBot11.Transfer.Packet;
 
-public class BaseEventDto
+public class BaseEventPacket
 {
     [JsonProperty("time")] public long Time { get; set; }
     

@@ -1,14 +1,14 @@
 using Newtonsoft.Json;
 
-namespace BotOneOne.OneBot11.Transfer.Dto;
+namespace BotOneOne.OneBot11.Transfer.Packet;
 
-public class ActionRequestDto
+public class ActionRequestPacket
 {
     [JsonProperty("action")] public string Action { get; set; } = "";
     [JsonProperty("echo")] public string? Echo { get; set; }
 }
 
-public class ActionRequestDto<T> : ActionRequestDto
+public class ActionRequestPacket<T> : ActionRequestPacket
 {
     [JsonProperty("params")] public T? Params { get; set; }
 }

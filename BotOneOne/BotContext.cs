@@ -2,14 +2,30 @@ using BotOneOne.MessageFormat;
 
 namespace BotOneOne;
 
-public abstract class BotContext : IProtocol
+public abstract class BotContext
 {
     public event EventHandler<DirectMessageEventArgs>? DirectMessage;
     public event EventHandler<GroupMessageEventArgs>? GroupMessage;
 
+    /// <summary>
+    /// 发送聊天消息
+    /// </summary>
+    /// <param name="target">发送目标</param>
+    /// <param name="message">消息</param>
     public abstract Task<MessageId> SendMessage(ChatId target, Message message);
+    
+    /// <summary>
+    /// 撤回聊天消息
+    /// </summary>
+    /// <param name="messageId">消息 Id</param>
     public abstract Task DeleteMessage(MessageId messageId);
 
+    /// <summary>
+    /// 获取消息内容
+    /// </summary>
+    /// <param name="messageId">消息 Id</param>
+    public abstract Task<MessageDetail> GetMessage(MessageId messageId);
+    
     public abstract bool IsOpened { get; }
     public abstract void Open();
     public abstract void Close();
@@ -25,21 +41,4 @@ public abstract class BotContext : IProtocol
     {
         GroupMessage?.Invoke(this, eventArgs);
     }
-}
-
-public class DirectMessageEventArgs
-{
-    public ChatId User { get; set; }
-    public Message Message { get; set; } = Message.Empty;
-    public MessageId MessageId { get; set; }
-    public DateTimeOffset Time { get; set; }
-}
-
-public class GroupMessageEventArgs
-{
-    public ChatId Group { get; set; }
-    public ChatId User { get; set; }
-    public Message Message { get; set; } = Message.Empty;
-    public MessageId MessageId { get; set; }
-    public DateTimeOffset Time { get; set; }
 }

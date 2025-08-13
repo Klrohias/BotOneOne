@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using BotOneOne.OneBot11.Transfer.Dto;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace BotOneOne.OneBot11.Transfer.Dto;
+namespace BotOneOne.OneBot11.Transfer.Packet;
 
-public class MessageEventDto : BaseEventDto
+public class MessageEventPacket : BaseEventPacket
 {
-    [JsonProperty("sender")] public UserInfo Sender { get; set; } = new();
+    [JsonProperty("sender")] public UserDto Sender { get; set; } = new();
 
     [JsonProperty("message")] public JArray? Message { get; set; }
 

@@ -93,7 +93,7 @@ public static class MessageSerializer
             result["type"] = reply.Type;
             result["data"] = new JObject
             {
-                ["id"] = reply.Data.MessageId.IntoTransparent<long>().Target
+                ["id"] = reply.Data.MessageId.AsTyped<long>().Target
             };
         } else if (segment is ImageMessageSegment image)
         {

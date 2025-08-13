@@ -1,32 +1,22 @@
 namespace BotOneOne;
 
-public struct MessageId
+public readonly struct MessageId(object target)
 {
-    public object Target { get; }
+    public object Target { get; } = target;
 
-    public MessageId(object target)
-    {
-        Target = target;
-    }
-
-    public MessageId<T> IntoTransparent<T>() where T : notnull
+    public MessageId<T> AsTyped<T>() where T : notnull
     {
         return new MessageId<T>((T)Target);
     }
 }
 
-public struct MessageId<T>
+public readonly struct MessageId<T>(T target)
     where T : notnull
 {
-    public T Target { get; }
+    public T Target { get; } = target;
 
-    public MessageId(T target)
+    public static implicit operator MessageId(MessageId<T> @this)
     {
-        Target = target;
-    }
-
-    public MessageId IntoOpaque()
-    {
-        return new MessageId(Target);
+        return new MessageId(@this.Target);
     }
 }

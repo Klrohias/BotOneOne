@@ -2,6 +2,7 @@ using BotOneOne.OneBot11.Connectivity;
 using BotOneOne.OneBot11.Transfer.Dto;
 using BotOneOne.OneBot11.Transfer.Packet;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BotOneOne.OneBot11;
 
@@ -32,9 +33,9 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
         _workerTask = null;
     }
 
-    private void HandleActionResponse(string packet)
+    private void HandleActionResponse(JToken packet)
     {
-        var actionResponse = JsonConvert.DeserializeObject<ActionResponsePacket>(packet);
+        var actionResponse = packet.ToObject<ActionResponsePacket>();
         if (actionResponse?.Echo == null)
         {
             return;
@@ -47,7 +48,7 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
         }
     }
 
-    protected abstract void HandleEvent(string eventType, string packet);
+    protected abstract void HandleEvent(string eventType, JToken packet);
 
     private async Task Receiver(CancellationToken cancellationToken)
     {
@@ -55,21 +56,23 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
         {
             try
             {
-                var packet = await connectionSource.ReceiveTextAsync(cancellationToken);
-                var baseResponse = JsonConvert.DeserializeObject<BaseIncomingPacket>(packet);
+                // read next packet and parse
+                var jsonPacket = JToken.Parse(await connectionSource.ReceiveTextAsync(cancellationToken));
+                var baseResponse = jsonPacket.ToObject<BaseIncomingPacket>();
 
                 if (baseResponse == null)
                 {
                     continue;
                 }
 
+                // check the packet type and dispatch
                 if (baseResponse.IsEventPacket)
                 {
-                    HandleEvent(baseResponse.PostType!, packet);
+                    HandleEvent(baseResponse.PostType!, jsonPacket);
                 }
                 else
                 {
-                    HandleActionResponse(packet);
+                    HandleActionResponse(jsonPacket);
                 }
             }
             catch (Exception exception)

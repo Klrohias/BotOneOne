@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotOneOne.OneBot11", "BotOn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotOneOne", "BotOneOne\BotOneOne.csproj", "{B207CC78-E58B-46C3-8B90-FA954EE3CF3A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotOneOne.Standard", "BotOneOne.Standard\BotOneOne.Standard.csproj", "{C1BAFB34-70F9-43DF-A566-1D59D68F628D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{B207CC78-E58B-46C3-8B90-FA954EE3CF3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B207CC78-E58B-46C3-8B90-FA954EE3CF3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B207CC78-E58B-46C3-8B90-FA954EE3CF3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1BAFB34-70F9-43DF-A566-1D59D68F628D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1BAFB34-70F9-43DF-A566-1D59D68F628D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1BAFB34-70F9-43DF-A566-1D59D68F628D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1BAFB34-70F9-43DF-A566-1D59D68F628D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

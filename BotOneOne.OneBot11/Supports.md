@@ -2,7 +2,7 @@
 
 ## OneBot v11
 
-### Action
+### Actions
 
  - [x] ~~send_private_msg 发送私聊消息~~ （使用 `send_msg`）  
  - [x] ~~send_group_msg 发送群消息~~（使用 `send_msg`）  
@@ -31,14 +31,33 @@
  - [x] get_group_member_info 获取群成员信息  
  - [x] get_group_member_list 获取群成员列表  
  - [ ] get_group_honor_info 获取群荣誉信息  
- - [ ] get_cookies 获取 Cookies  
- - [ ] get_csrf_token 获取 CSRF Token  
- - [ ] get_credentials 获取 QQ 相关接口凭证  
+ - [ ] ~~get_cookies 获取 Cookies~~（不打算实现）  
+ - [ ] ~~get_csrf_token 获取 CSRF Token~~（不打算实现）  
+ - [ ] ~~get_credentials 获取 QQ 相关接口凭证~~（不打算实现）  
  - [ ] get_record 获取语音  
  - [ ] get_image 获取图片  
  - [ ] can_send_image 检查是否可以发送图片  
  - [ ] can_send_record 检查是否可以发送语音  
- - [ ] get_status 获取运行状态  
- - [ ] get_version_info 获取版本信息  
- - [ ] set_restart 重启 OneBot 实现  
- - [ ] clean_cache 清理缓存  
+ - [ ] ~~get_status 获取运行状态~~（不打算实现）  
+ - [ ] ~~get_version_info 获取版本信息~~（不打算实现）  
+ - [ ] ~~set_restart 重启 OneBot 实现~~（不打算实现）  
+ - [ ] ~~clean_cache 清理缓存~~（不打算实现）  
+
+### Events
+
+- [x] 私聊消息  
+- [x] 群聊消息  
+- [ ] 群文件上传  
+- [ ] 群管理员变动  
+- [ ] 群成员减少  
+- [ ] 群成员增加  
+- [ ] 群禁言  
+- [ ] 好友添加  
+- [ ] 群消息撤回  
+- [ ] 好友消息撤回  
+- [ ] 群内戳一戳  
+- [ ] 群红包运气王  
+- [ ] 群成员荣誉变更  
+- [x] 加好友请求  
+- [x] 加群请求  
+- [x] 加群邀请  

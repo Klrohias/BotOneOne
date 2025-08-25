@@ -1,47 +1,48 @@
+using BotOneOne.Standard;
+
 namespace BotOneOne.OneBot11.Entities;
 
-public readonly struct Group
+/// <summary>
+/// 代表一个群的对象
+/// </summary>
+/// <param name="Id">群号</param>
+/// <param name="Extra">群聊的额外信息</param>
+public record Group(long Id, GroupExtra? Extra) : IExtra
 {
-    public readonly long Id;
-    public readonly GroupExtra? Extra;
-
-    private Group(long id, GroupExtra? extra)
-    {
-        Id = id;
-        Extra = extra;
-    }
-
+    /// <summary>
+    /// 构造一个 Group 对象，与 new 基本无异
+    /// </summary>
     public static Group Of(long id, GroupExtra? extra = null)
     {
         return new Group(id, extra);
     }
+
+    public object? GetExtra(string key)
+    {
+        if (key == nameof(GroupExtras.Id))
+        {
+            return Id;
+        }
+        
+        if (Extra is null) throw new NotSupportedException("Not supported on this object");
+        return key switch
+        {
+            nameof(GroupExtras.Capacity) => Extra.Capacity,
+            nameof(GroupExtras.Name) => Extra.Name,
+            nameof(GroupExtras.MemberCount) => Extra.MemberCount,
+            _ => throw new NotSupportedException($"Extra \"{key}\" is not supported")
+        };
+    }
 }
 
 /// <summary>
-/// 群额外信息
+/// 群聊的额外信息
 /// </summary>
 /// <param name="Name">群名称</param>
 /// <param name="MemberCount">群人数</param>
 /// <param name="Capacity">群容量</param>
 public record GroupExtra(
-    string Name,
-    int MemberCount,
-    int Capacity);
-
-public static partial class Extensions
-{
-    public static ChatId<Group> AsChatId(this Group group)
-    {
-        return new ChatId<Group>(group);
-    }
-
-    public static bool IsGroup(this ChatId chatId)
-    {
-        return chatId.Target is Group;
-    }
-
-    public static Group AsGroup(this ChatId chatId)
-    {
-        return chatId.AsTyped<Group>().Target;
-    }
-}
+    string? Name = null,
+    int? MemberCount = null,
+    int? Capacity = null);
+    

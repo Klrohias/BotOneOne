@@ -1,29 +1,42 @@
+using BotOneOne.Modules;
+using BotOneOne.Standard;
+using Newtonsoft.Json;
+
 namespace BotOneOne.OneBot11.Entities;
 
-public readonly struct User
+/// <summary>
+/// 代表一个用户的对象
+/// </summary>
+/// <param name="Id">QQ号</param>
+/// <param name="Extra">额外信息</param>
+public record User(long Id, UserExtra? Extra) : IExtra
 {
     /// <summary>
-    /// QQ 号
-    /// </summary>
-    public readonly long Id;
-
-    /// <summary>
-    /// 用户的额外信息，仅从框架得出（事件参数/方法返回值）的 User 对象可能会有
-    /// </summary>
-    public readonly UserExtra? Extra;
-
-    private User(long id, UserExtra? extra)
-    {
-        Id = id;
-        Extra = extra;
-    }
-    
-    /// <summary>
-    /// 创建 User
+    /// 构造一个 User 对象，与 new 基本无异
     /// </summary>
     public static User Of(long id, UserExtra? extra = null)
     {
         return new User(id, extra);
+    }
+
+    public object? GetExtra(string key)
+    {
+        if (key == nameof(UserExtras.Id))
+        {
+            return Id;
+        }
+        
+        if (Extra is null) throw new NotSupportedException("Not supported on this object");
+        return key switch
+        {
+            nameof(UserExtras.Nickname) => Extra.Name,
+            _ => throw new NotSupportedException($"Extra \"{key}\" is not supported")
+        };
+    }
+
+    static User()
+    {
+        ModuleManager.RegisterSerializableType<User>("onebot11-user");
     }
 }
 
@@ -51,21 +64,3 @@ public record UserExtra(
     string? GroupHonor = null,
     DateTimeOffset? GroupJoinTime = null,
     DateTimeOffset? GroupLastSentTime = null);
-
-public static partial class Extensions
-{
-    public static ChatId<User> AsChatId(this User user)
-    {
-        return new ChatId<User>(user);
-    }
-
-    public static bool IsUser(this ChatId chatId)
-    {
-        return chatId.Target is User;
-    }
-    
-    public static User AsUser(this ChatId chatId)
-    {
-        return chatId.AsTyped<User>().Target;
-    }
-}

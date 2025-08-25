@@ -5,6 +5,7 @@ using BotOneOne.OneBot11.Transfer;
 using BotOneOne.OneBot11.Transfer.Dto;
 using BotOneOne.OneBot11.Transfer.Packet;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BotOneOne.OneBot11;
 
@@ -55,7 +56,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
 
         return user.ToUser().AsChatId();
     }
-    
+
     /// <summary>
     /// 获取完整的群成员信息
     /// </summary>
@@ -68,7 +69,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
 
         return userInfo.ToUser().AsChatId();
     }
-    
+
     /// <summary>
     /// 获取完整的群信息
     /// </summary>
@@ -80,7 +81,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
 
         return groupDto.ToGroup().AsChatId();
     }
-    
+
     /// <summary>
     /// 群组踢人
     /// </summary>
@@ -91,7 +92,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return InvokeAction("reject_add_request",
             new { group_id = groupId, user_id = userId, reject_add_request = blacklisted });
     }
-    
+
     /// <summary>
     /// 禁言群员
     /// </summary>
@@ -102,7 +103,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return InvokeAction("set_group_ban",
             new { group_id = groupId, user_id = userId, duration = time });
     }
-    
+
     /// <summary>
     /// 设置群组全员禁言
     /// </summary>
@@ -112,7 +113,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return InvokeAction("set_group_whole_ban",
             new { group_id = groupId, enable });
     }
-    
+
     /// <summary>
     /// 设置群名片
     /// </summary>
@@ -122,7 +123,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return InvokeAction("set_group_card",
             new { group_id = groupId, card = mask });
     }
-    
+
     /// <summary>
     /// 获取群成员列表
     /// </summary>
@@ -131,7 +132,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         var groupId = group.AsGroup().Id;
         var userList = await InvokeAction<List<UserDto>, object>("get_group_member_list",
             new { group_id = groupId }) ?? throw new NullReferenceException("Get null response data");
-        
+
         return userList.Select(x => x.ToUser().AsChatId());
     }
 
@@ -142,10 +143,10 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
     {
         var userList = await InvokeAction<List<UserDto>, object>("get_friend_list",
             new { }) ?? throw new NullReferenceException("Get null response data");
-        
+
         return userList.Select(x => x.ToUser().AsChatId());
     }
-    
+
     /// <summary>
     /// 获取群列表
     /// </summary>
@@ -153,56 +154,143 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
     {
         var groupList = await InvokeAction<List<GroupDto>, object>("get_group_list",
             new { }) ?? throw new NullReferenceException("Get null response data");
-        
+
         return groupList.Select(x => x.ToGroup().AsChatId());
     }
-    
-    protected override void HandleEvent(string eventType, string packet)
+
+    protected override void HandleEvent(string eventType, JToken packet)
     {
+        // check the event type and dispatch to handlers
         switch (eventType)
         {
             case "message":
-            {
-                var dto = JsonConvert.DeserializeObject<MessageEventPacket>(packet)
-                          ?? throw new Exception("Null packet deserialized");
-
-                var message =
-                    MessageSerializer.DeserializeMessage(
-                        dto.Message ?? throw new Exception("Null message deserialized"));
-                var messageId = new MessageId(dto.MessageId);
-                var user = dto.Sender.ToUser().AsChatId();
-                
-                if (dto.MessageType == "group")
-                {
-                    // Group message
-                    var groupId = dto.GroupId ?? throw new Exception("Null group deserialized");
-                    var group = Group.Of(groupId).AsChatId();
-
-                    RaiseGroupMessage(new GroupMessageEventArgs
-                    {
-                        Group = group,
-                        User = user,
-                        MessageId = messageId,
-                        Time = DateTimeOffset.FromUnixTimeSeconds(dto.Time),
-                        Message = message
-                    });
-                }
-                else
-                {
-                    // Direct message
-                    RaiseDirectMessage(new DirectMessageEventArgs
-                    {
-                        User = user,
-                        MessageId = messageId,
-                        Time = DateTimeOffset.FromUnixTimeSeconds(dto.Time),
-                        Message = message
-                    });
-                }
-
+                HandleMessageEvent(packet);
                 break;
-            }
+
+            case "request":
+                HandleRequestEvent(packet);
+                return;
+
+
             default:
                 throw new Exception($"Unknown eventType \"{eventType}\"");
         }
     }
+
+    private void HandleMessageEvent(JToken rawPacket)
+    {
+        var packet = rawPacket.ToObject<MessageEventPacket>() ?? throw new Exception("Null packet deserialized");
+
+        var message =
+            MessageSerializer.DeserializeMessage(
+                packet.Message ?? throw new Exception("Null message deserialized"));
+        var messageId = new MessageId(packet.MessageId);
+        var user = packet.Sender.ToUser().AsChatId();
+
+        if (packet.MessageType == "group")
+        {
+            // Group message
+            var groupId = packet.GroupId ?? throw new Exception("Null group deserialized");
+            var group = Group.Of(groupId).AsChatId();
+
+            RaiseGroupMessageReceived(new GroupMessageEventArgs
+            {
+                Group = group,
+                User = user,
+                MessageId = messageId,
+                Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time),
+                Message = message
+            });
+        }
+        else
+        {
+            // Direct message
+            RaiseDirectMessageReceived(new DirectMessageEventArgs
+            {
+                User = user,
+                MessageId = messageId,
+                Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time),
+                Message = message
+            });
+        }
+    }
+
+    private void HandleRequestEvent(JToken rawPacket)
+    {
+        var packet = rawPacket.ToObject<RequestEventPacket>() ?? throw new Exception("Null packet deserialized");
+        switch (packet.RequestType)
+        {
+            case "group":
+                switch (packet.SubType)
+                {
+                    case "add":
+                        HandleGroupEntranceEvent(packet);
+                        break;
+                    case "invite":
+                        HandleGroupInvitationEvent(packet);
+                        break;
+                    default:
+                        throw new Exception($"Unknown subType \"{packet.SubType}\"");
+                }
+
+                break;
+            
+            case "friend":
+                HandleFriendAddEvent(packet);
+                break;
+
+            default:
+                throw new Exception($"Unknown requestType \"{packet.RequestType}\"");
+        }
+    }
+
+    private void HandleGroupEntranceEvent(RequestEventPacket packet)
+    {
+        var groupId = packet.GroupId ?? throw new Exception("Null group deserialized");
+        var group = Group.Of(groupId).AsChatId();
+        
+        var userId = packet.UserId ?? throw new Exception("Null user deserialized");
+        var user = User.Of(userId).AsChatId();
+
+        RaiseGroupEntranceReceived(new GroupRequestEventArgs
+        {
+            Group = group,
+            User = user,
+            Comment = packet.Comment,
+            FeedbackId = new FeedbackId(packet.Flag),
+            Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time)
+        });
+    }
+    
+    private void HandleGroupInvitationEvent(RequestEventPacket packet)
+    {
+        var groupId = packet.GroupId ?? throw new Exception("Null group deserialized");
+        var group = Group.Of(groupId).AsChatId();
+        
+        var userId = packet.UserId ?? throw new Exception("Null user deserialized");
+        var user = User.Of(userId).AsChatId();
+
+        RaiseGroupInvitationReceived(new GroupRequestEventArgs
+        {
+            Group = group,
+            User = user,
+            FeedbackId = new FeedbackId(packet.Flag),
+            Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time)
+        });
+    }
+    
+    private void HandleFriendAddEvent(RequestEventPacket packet)
+    {
+        var userId = packet.UserId ?? throw new Exception("Null user deserialized");
+        var user = User.Of(userId).AsChatId();
+
+        RaiseFriendAddRequested(new FriendAddEventArgs
+        {
+            User = user,
+            Comment = packet.Comment,
+            FeedbackId = new FeedbackId(packet.Flag),
+            Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time)
+        });
+    }
 }
+

@@ -1,4 +1,6 @@
-﻿namespace BotEleven.Milky.Entities;
+﻿using BotEleven.Modules;
+
+namespace BotEleven.Milky.Entities;
 
 // https://milky.ntqqrev.org/struct/GroupEntity
 /*
@@ -33,4 +35,9 @@ public class Group
     /// 群容量
     /// </summary>
     public int MaxMemberCount { get; init; }
+    
+    static Group()
+    {
+        ModuleManager.RegisterSerializableType<Group>("milky-group");
+    }
 }

@@ -13,9 +13,11 @@ public abstract class BaseOneBot11Context : BotContext
     private readonly SnowflakeId _snowflakeId;
     private readonly OneBot11Options _options;
     private readonly ConcurrentDictionary<long, TaskCompletionSource<ActionResponsePacket>> _pendingRequests = [];
+    private readonly IConnectionSource _connectionSource;
+    private readonly Lock _lock = new();
+    
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
-    private readonly IConnectionSource _connectionSource;
 
     protected BaseOneBot11Context(IConnectionSource connectionSource, OneBot11Options? options)
     {
@@ -28,19 +30,25 @@ public abstract class BaseOneBot11Context : BotContext
 
     public override void Open()
     {
-        if (_workerTask != null)
+        lock (_lock)
         {
-            return;
-        }
+            if (_workerTask != null)
+            {
+                return;
+            }
 
-        _workerTask = Receiver(_cancellationTokenSource.Token);
+            _workerTask = Receiver(_cancellationTokenSource.Token);
+        }
     }
 
     public override void Close()
     {
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
-        _workerTask = null;
+        lock (_lock)
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _workerTask = null;
+        }
     }
 
     private void HandleActionResponse(JToken packet)
@@ -93,7 +101,7 @@ public abstract class BaseOneBot11Context : BotContext
             }
             catch (Exception exception)
             {
-                Utils.LogException(exception);
+                Logger.LogException(exception);
             }
         }
     }

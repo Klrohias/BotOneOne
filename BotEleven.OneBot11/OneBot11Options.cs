@@ -3,9 +3,11 @@ namespace BotEleven.OneBot11;
 public struct OneBot11Options
 {
     public TimeSpan InvocationTimeout { get; set; }
+    public short WorkerId { get; set; }
 
     public static OneBot11Options Default => new()
     {
-        InvocationTimeout = TimeSpan.FromSeconds(30)
+        InvocationTimeout = TimeSpan.FromSeconds(30),
+        WorkerId = 1
     };
 }

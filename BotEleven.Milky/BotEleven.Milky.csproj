@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\BotEleven.Standard\BotEleven.Standard.csproj" />
+      <ProjectReference Include="..\BotEleven\BotEleven.csproj" />
+    </ItemGroup>
+
 </Project>

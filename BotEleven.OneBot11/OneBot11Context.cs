@@ -8,6 +8,11 @@ using Newtonsoft.Json.Linq;
 
 namespace BotEleven.OneBot11;
 
+/// <summary>
+/// 支持 OneBot 11 协议的 BotContext
+/// </summary>
+/// <param name="connectionSource">OneBot 11 的连接源</param>
+/// <param name="options">连接选项，默认为 <see cref="OneBot11Options.Default"/></param>
 public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options? options = null)
     : BaseOneBot11Context(connectionSource, options)
 {

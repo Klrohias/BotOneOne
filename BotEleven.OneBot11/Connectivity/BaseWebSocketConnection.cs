@@ -9,7 +9,7 @@ public abstract class BaseWebSocketConnection : IConnectionSource
     private readonly BufferBlock<Memory<byte>> _sendQueue = new();
 
     protected WebSocket? Connection { get; set; }
-    public bool IsOpen => Connection is { State: WebSocketState.Open };
+    public virtual bool IsOpen => Connection is { State: WebSocketState.Open };
 
     public Task<Memory<byte>> ReadPacket(CancellationToken cancellationToken)
     {

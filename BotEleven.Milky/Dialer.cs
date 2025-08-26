@@ -34,6 +34,7 @@ internal class Dialer(Uri endpoint, MilkyOptions options)
         {
             Opened = false;
             _cancellationTokenSource.Cancel();
+            _clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
             _workerTask?.Wait();
             
             _workerTask = null;

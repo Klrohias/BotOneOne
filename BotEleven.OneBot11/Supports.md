@@ -9,8 +9,8 @@
  - [x] send_msg 发送消息  
  - [x] delete_msg 撤回消息  
  - [x] get_msg 获取消息  
- - [ ] get_forward_msg 获取合并转发消息  
- - [ ] send_like 发送好友赞  
+ - [ ] ~~get_forward_msg 获取合并转发消息~~（OneBot11的后端实现过于混乱，暂时不实现）  
+ - [ ] ~~send_like 发送好友赞~~（不打算实现）  
  - [x] set_group_kick 群组踢人  
  - [x] set_group_ban 群组单人禁言  
  - [ ] set_group_anonymous_ban 群组匿名用户禁言  
@@ -18,12 +18,12 @@
  - [ ] set_group_admin 群组设置管理员  
  - [ ] set_group_anonymous 群组匿名  
  - [x] set_group_card 设置群名片（群备注）  
- - [ ] set_group_name 设置群名  
- - [ ] set_group_leave 退出群组  
+ - [x] set_group_name 设置群名  
+ - [x] set_group_leave 退出群组  
  - [ ] set_group_special_title 设置群组专属头衔  
- - [ ] set_friend_add_request 处理加好友请求  
- - [ ] set_group_add_request 处理加群请求／邀请  
- - [ ] get_login_info 获取登录号信息  
+ - [x] set_friend_add_request 处理加好友请求  
+ - [x] set_group_add_request 处理加群请求／邀请  
+ - [ ] ~~get_login_info 获取登录号信息~~（不打算实现）  
  - [x] get_stranger_info 获取陌生人信息  
  - [x] get_friend_list 获取好友列表  
  - [x] get_group_info 获取群信息  
@@ -34,10 +34,10 @@
  - [ ] ~~get_cookies 获取 Cookies~~（不打算实现）  
  - [ ] ~~get_csrf_token 获取 CSRF Token~~（不打算实现）  
  - [ ] ~~get_credentials 获取 QQ 相关接口凭证~~（不打算实现）  
- - [ ] get_record 获取语音  
- - [ ] get_image 获取图片  
- - [ ] can_send_image 检查是否可以发送图片  
- - [ ] can_send_record 检查是否可以发送语音  
+ - [x] get_record 获取语音  
+ - [x] get_image 获取图片  
+ - [ ] ~~can_send_image 检查是否可以发送图片~~（不打算实现）  
+ - [ ] ~~can_send_record 检查是否可以发送语音~~（不打算实现）  
  - [ ] ~~get_status 获取运行状态~~（不打算实现）  
  - [ ] ~~get_version_info 获取版本信息~~（不打算实现）  
  - [ ] ~~set_restart 重启 OneBot 实现~~（不打算实现）  
@@ -64,3 +64,26 @@
 
 ### Messages
 
+- [x] 纯文本   
+- [ ] QQ 表情   
+- [x] 图片   
+- [x] 语音   
+- [x] 短视频   
+- [x] @某人   
+- [ ] 猜拳魔法表情   
+- [ ] 掷骰子魔法表情   
+- [ ] 窗口抖动（戳一戳）   
+- [ ] 戳一戳   
+- [ ] 匿名发消息   
+- [ ] 链接分享   
+- [x] 推荐好友   
+- [x] 推荐群   
+- [ ] 位置   
+- [ ] 音乐分享   
+- [ ] 音乐自定义分享   
+- [x] 回复   
+- [ ] ~~合并转发~~（OneBot11的后端实现过于混乱，暂时不实现）   
+- [ ] ~~合并转发节点~~（OneBot11的后端实现过于混乱，暂时不实现）   
+- [ ] ~~合并转发自定义节点~~（OneBot11的后端实现过于混乱，暂时不实现）   
+- [ ] XML 消息   
+- [ ] JSON 消息   

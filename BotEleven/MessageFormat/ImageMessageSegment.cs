@@ -1,21 +1,12 @@
 ﻿namespace BotEleven.MessageFormat;
 
-public class ImageMessageSegment : MessageSegment<ImageMessageSegment.Payload>
+public class ImageMessageSegment(FileId file) : MessageSegment
 {
-    public ImageMessageSegment(string file)
-    {
-        Data = new Payload { File = file };
-    }
+    public override string Type => "image";
+    public FileId File { get; set; } = file;
 
     public override string ToString()
     {
-        return $"[Image at {Data.File}]";
+        return $"[Image {File}]";
     }
-
-    public struct Payload
-    {
-        public string File { get; set; }
-    }
-
-    public override string Type => "image";
 }

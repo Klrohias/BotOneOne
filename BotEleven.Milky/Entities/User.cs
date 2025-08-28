@@ -59,6 +59,6 @@ public class User : IExtra
 
     static User()
     {
-        ModuleManager.RegisterSerializableType<User>("milky1-user");
+        ModuleManager.RegisterSerializableType<User>("milky-user");
     }
 }

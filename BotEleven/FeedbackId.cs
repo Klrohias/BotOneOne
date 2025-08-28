@@ -10,7 +10,7 @@ namespace BotEleven;
 public readonly struct FeedbackId(object target) : ISerializable
 {
     internal FeedbackId(SerializationInfo info, StreamingContext context)
-        : this(SerializeHelper.Deserialize(info) ?? throw new Exception("Deserialize null messageId"))
+        : this(SerializeHelper.Deserialize(info) ?? throw new Exception("Deserialize null feedbackId"))
     {
     }
     
@@ -36,7 +36,7 @@ public readonly struct FeedbackId<T>(T target)
     where T : notnull
 {
     internal FeedbackId(SerializationInfo info, StreamingContext context)
-        : this(SerializeHelper.Deserialize<T>(info) ?? throw new Exception("Deserialize null messageId"))
+        : this(SerializeHelper.Deserialize<T>(info) ?? throw new Exception("Deserialize null feedbackId"))
     {
     }
     

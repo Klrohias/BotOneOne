@@ -2,6 +2,9 @@
 
 namespace BotEleven.OneBot11.Connectivity;
 
+/// <summary>
+/// OneBot 11 WebSocket 反向连接的连接源
+/// </summary>
 public class ReversedWebSocketConnectionSource : BaseWebSocketConnection
 {
     private CancellationTokenSource _cancellationTokenSource = new();

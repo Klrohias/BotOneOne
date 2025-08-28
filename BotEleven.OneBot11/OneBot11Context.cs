@@ -4,11 +4,15 @@ using BotEleven.OneBot11.Entities;
 using BotEleven.OneBot11.Transfer;
 using BotEleven.OneBot11.Transfer.Dto;
 using BotEleven.OneBot11.Transfer.Packet;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BotEleven.OneBot11;
 
+/// <summary>
+/// 支持 OneBot 11 协议的 BotContext
+/// </summary>
+/// <param name="connectionSource">OneBot 11 的连接源</param>
+/// <param name="options">连接选项，默认为 <see cref="OneBot11Options.Default"/></param>
 public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options? options = null)
     : BaseOneBot11Context(connectionSource, options)
 {
@@ -37,18 +41,15 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
 
     public override async Task<MessageDetail> GetMessage(MessageId messageId)
     {
-        var response = await InvokeAction<GetMessageResponseDto, MessageIdDto>("send_msg",
+        var response = await InvokeAction<GetMessageResponseDto, MessageIdDto>("get_msg",
                            new MessageIdDto { MessageId = messageId.AsTyped<long>().Target }) ??
                        throw new Exception("Get null response");
 
         return new MessageDetail(DateTimeOffset.FromUnixTimeSeconds(response.Time), response.Sender.ToUser().AsChatId(),
             MessageSerializer.DeserializeMessage(response.Message));
     }
-
-    /// <summary>
-    /// 获取完整的用户信息
-    /// </summary>
-    public async Task<ChatId<User>> GetUserInfo(ChatId input)
+    
+    public override async Task<ChatId> GetUserInfo(ChatId input)
     {
         var userId = input.AsUser().Id;
         var user = await InvokeAction<UserDto, object>("get_stranger_info",
@@ -60,7 +61,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
     /// <summary>
     /// 获取完整的群成员信息
     /// </summary>
-    public async Task<ChatId<User>> GetGroupMemberInfo(ChatId group, ChatId user)
+    public override async Task<ChatId> GetGroupMemberInfo(ChatId group, ChatId user)
     {
         var groupId = group.AsGroup().Id;
         var userId = user.AsUser().Id;
@@ -70,10 +71,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return userInfo.ToUser().AsChatId();
     }
 
-    /// <summary>
-    /// 获取完整的群信息
-    /// </summary>
-    public async Task<ChatId<Group>> GetGroupInfo(ChatId group)
+    public override async Task<ChatId> GetGroupInfo(ChatId group)
     {
         var groupId = group.AsGroup().Id;
         var groupDto = await InvokeAction<GroupDto, object>("get_group_info",
@@ -82,10 +80,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         return groupDto.ToGroup().AsChatId();
     }
 
-    /// <summary>
-    /// 群组踢人
-    /// </summary>
-    public Task GroupKick(ChatId group, ChatId user, bool blacklisted = false)
+    public override Task GroupKick(ChatId group, ChatId user, bool blacklisted = false)
     {
         var groupId = group.AsGroup().Id;
         var userId = user.AsUser().Id;
@@ -93,10 +88,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
             new { group_id = groupId, user_id = userId, reject_add_request = blacklisted });
     }
 
-    /// <summary>
-    /// 禁言群员
-    /// </summary>
-    public Task SetGroupMute(ChatId group, ChatId user, int time = 0)
+    public override Task SetGroupMute(ChatId group, ChatId user, int time = 0)
     {
         var groupId = group.AsGroup().Id;
         var userId = user.AsUser().Id;
@@ -104,10 +96,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
             new { group_id = groupId, user_id = userId, duration = time });
     }
 
-    /// <summary>
-    /// 设置群组全员禁言
-    /// </summary>
-    public Task SetGroupMute(ChatId group, bool enable = false)
+    public override Task SetGroupMute(ChatId group, bool enable = false)
     {
         var groupId = group.AsGroup().Id;
         return InvokeAction("set_group_whole_ban",
@@ -124,38 +113,108 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
             new { group_id = groupId, card = mask });
     }
 
-    /// <summary>
-    /// 获取群成员列表
-    /// </summary>
-    public async Task<IEnumerable<ChatId<User>>> ListGroupMembers(ChatId group)
+    public override async Task<IEnumerable<ChatId>> ListGroupMembers(ChatId group)
     {
         var groupId = group.AsGroup().Id;
         var userList = await InvokeAction<List<UserDto>, object>("get_group_member_list",
             new { group_id = groupId }) ?? throw new NullReferenceException("Get null response data");
 
-        return userList.Select(x => x.ToUser().AsChatId());
+        return userList.Select(x => (ChatId)x.ToUser().AsChatId());
     }
 
-    /// <summary>
-    /// 获取好友列表
-    /// </summary>
-    public async Task<IEnumerable<ChatId<User>>> ListFriends()
+    public override async Task<IEnumerable<ChatId>> ListFriends()
     {
         var userList = await InvokeAction<List<UserDto>, object>("get_friend_list",
             new { }) ?? throw new NullReferenceException("Get null response data");
 
-        return userList.Select(x => x.ToUser().AsChatId());
+        return userList.Select(x => (ChatId)x.ToUser().AsChatId());
     }
 
-    /// <summary>
-    /// 获取群列表
-    /// </summary>
-    public async Task<IEnumerable<ChatId<Group>>> ListGroups()
+    public override async Task<IEnumerable<ChatId>> ListGroups()
     {
         var groupList = await InvokeAction<List<GroupDto>, object>("get_group_list",
             new { }) ?? throw new NullReferenceException("Get null response data");
 
-        return groupList.Select(x => x.ToGroup().AsChatId());
+        return groupList.Select(x => (ChatId)x.ToGroup().AsChatId());
+    }
+
+    public override async Task FeedbackGroupRequest(FeedbackId feedbackId, bool approve = false, string? comment = null)
+    {
+        var groupRequest = feedbackId.AsTyped<GroupRequest>().Target;
+        await InvokeAction<object, object>("set_group_add_request",
+            new
+            {
+                flag = groupRequest.Flag,
+                sub_type = groupRequest.IsInvite ? "invite" : "add",
+                approve,
+                reason = comment
+            });
+    }
+    
+    public override async Task FeedbackFriendRequest(FeedbackId feedbackId, bool approve = false)
+    {
+        var groupRequest = feedbackId.AsTyped<GroupRequest>().Target;
+        await InvokeAction<object, object>("set_friend_add_request",
+            new
+            {
+                flag = groupRequest.Flag,
+                approve,
+            });
+    }
+
+    public override async Task LeaveGroup(ChatId group)
+    {
+        if (!group.IsGroup())
+        {
+            throw new ArgumentException("The given chatId is not a group", nameof(group));
+        }
+        
+        await InvokeAction<object, object>("set_group_leave",
+            new
+            {
+                group_id = group.AsGroup().Id,
+                is_dismiss = true,
+            });
+    }
+
+    public override async Task RenameGroup(ChatId group, string newGroupName)
+    {
+        if (!group.IsGroup())
+        {
+            throw new ArgumentException("The given chatId is not a group", nameof(group));
+        }
+        
+        await InvokeAction<object, object>("set_group_name",
+            new
+            {
+                group_id = group.AsGroup().Id,
+                group_name = newGroupName,
+            });
+    }
+    
+    public override async Task<string> GetImage(FileId fileId)
+    {
+        var stringFileId = fileId.AsTyped<FileIdContent>().Target.File;
+        var result = await InvokeAction<FileDto, FileDto>("get_image",
+            new FileDto
+            {
+                File = stringFileId
+            }) ?? throw new Exception("Got null response");
+
+        return result.File;
+    }
+
+    public override async Task<string> GetRecord(FileId fileId, string format = "amr")
+    {
+        var stringFileId = fileId.AsTyped<FileIdContent>().Target.File;
+        var result = await InvokeAction<FileDto, object>("get_record",
+            new
+            {
+                file = stringFileId,
+                out_format = format
+            }) ?? throw new Exception("Got null response");
+
+        return result.File;
     }
 
     protected override void HandleEvent(string eventType, JToken packet)
@@ -170,8 +229,7 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
             case "request":
                 HandleRequestEvent(packet);
                 return;
-
-
+            
             default:
                 throw new Exception($"Unknown eventType \"{eventType}\"");
         }
@@ -252,12 +310,14 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         var userId = packet.UserId ?? throw new Exception("Null user deserialized");
         var user = User.Of(userId).AsChatId();
 
+        var request = new GroupRequest(false, packet.Flag);
+
         RaiseGroupEntranceReceived(new GroupRequestEventArgs
         {
             Group = group,
             User = user,
             Comment = packet.Comment,
-            FeedbackId = new FeedbackId(packet.Flag),
+            FeedbackId = new FeedbackId(request),
             Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time)
         });
     }
@@ -270,11 +330,13 @@ public class OneBot11Context(IConnectionSource connectionSource, OneBot11Options
         var userId = packet.UserId ?? throw new Exception("Null user deserialized");
         var user = User.Of(userId).AsChatId();
 
+        var request = new GroupRequest(true, packet.Flag);
+        
         RaiseGroupInvitationReceived(new GroupRequestEventArgs
         {
             Group = group,
             User = user,
-            FeedbackId = new FeedbackId(packet.Flag),
+            FeedbackId = new FeedbackId(request),
             Time = DateTimeOffset.FromUnixTimeSeconds(packet.Time)
         });
     }

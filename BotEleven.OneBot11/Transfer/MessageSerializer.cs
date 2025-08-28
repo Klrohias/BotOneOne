@@ -40,7 +40,39 @@ public static class MessageSerializer
             {
                 var target = segment["data"]?["file"]?.ToString()
                              ?? throw new NullReferenceException("Malformed image segment");
-                return new ImageMessageSegment(target);
+                return new ImageMessageSegment(new FileId(new FileIdContent(target)));
+            }
+            case "record":
+            {
+                var target = segment["data"]?["file"]?.ToString()
+                             ?? throw new NullReferenceException("Malformed recording segment");
+                return new RecordingMessageSegment(new FileId(new FileIdContent(target)));
+            }
+            case "video":
+            {
+                var target = segment["data"]?["file"]?.ToString()
+                             ?? throw new NullReferenceException("Malformed video segment");
+                return new VideoMessageSegment(new FileId(new FileIdContent(target)));
+            }
+            case "contact":
+            {
+                var contactType = segment["data"]?["type"]?.ToString();
+                
+                var idString = segment["data"]?["id"]?.ToString()
+                                  ?? throw new NullReferenceException("Invalid contact target");
+
+                return new ContactMessageSegment(contactType switch
+                {
+                    "qq" => User.Of(long.Parse(idString)).AsChatId(),
+                    "group" => Group.Of(long.Parse(idString)).AsChatId(),
+                    _ => throw new Exception("Invalid contact type"),
+                });
+            }
+            case "forward":
+            {
+                var idString = segment["data"]?["id"]?.ToString()
+                               ?? throw new NullReferenceException("Invalid forward content");
+                return new ForwardedMessageSegment(new MessageId(idString));
             }
             default:
             {
@@ -60,48 +92,90 @@ public static class MessageSerializer
         return result;
     }
 
+    private static string ExtractFileId(FileId fileId)
+    {
+        return fileId.Target switch
+        {
+            string stringFileId => stringFileId,
+            FileIdContent fileIdContent => fileIdContent.File,
+            _ => throw new ArgumentException("Unsupported fileId", nameof(fileId))
+        };
+    }
+
     private static JObject SerializeSegment(MessageSegment segment)
     {
         var result = new JObject();
-        if (segment is UnknownMessageSegment)
+        switch (segment)
         {
-            throw new Exception("Unexpected unknown segment when parsing message");
-        }
-
-        if (segment is TextMessageSegment text)
-        {
-            result["type"] = text.Type;
-            result["data"] = new JObject
-            {
-                ["text"] = text.Data.Text
-            };
-        }
-        else if (segment is AtMessageSegment at)
-        {
-            if (!at.Data.Target.IsUser())
-            {
-                throw new Exception("Unexpected at target");
-            }
+            case TextMessageSegment text:
+                result["type"] = "text";
+                result["data"] = new JObject
+                {
+                    ["text"] = text.Text
+                };
+                break;
             
-            result["type"] = at.Type;
-            result["data"] = new JObject
-            {
-                ["qq"] = at.Data.Target.AsUser().Id
-            };
-        } else if (segment is ReplyMessageSegment reply)
-        {
-            result["type"] = reply.Type;
-            result["data"] = new JObject
-            {
-                ["id"] = reply.Data.MessageId.AsTyped<long>().Target
-            };
-        } else if (segment is ImageMessageSegment image)
-        {
-            result["type"] = image.Type;
-            result["data"] = new JObject
-            {
-                ["file"] = image.Data.File
-            };
+            case AtMessageSegment at:
+                if (!at.Target.IsUser())
+                {
+                    throw new Exception("Unexpected at target");    
+                }
+                
+                result["type"] = "at";
+                result["data"] = new JObject
+                {
+                    ["qq"] = at.Target.AsUser().Id
+                };
+                break;
+            
+            case ReplyMessageSegment reply:
+                result["type"] = "reply";
+                result["data"] = new JObject
+                {
+                    ["id"] = reply.MessageId.AsTyped<long>().Target
+                };
+                break;
+            
+            case ImageMessageSegment image:
+                result["type"] = "image";
+                result["data"] = new JObject
+                {
+                    ["file"] = ExtractFileId(image.File)
+                };
+                break;
+            
+            case RecordingMessageSegment recording:
+                result["type"] = "record";
+                result["data"] = new JObject
+                {
+                    ["file"] = ExtractFileId(recording.File)
+                };
+                break;
+            
+            case VideoMessageSegment video:
+                result["type"] = "video";
+                result["data"] = new JObject
+                {
+                    ["file"] = ExtractFileId(video.File)
+                };
+                break;
+            
+            case ContactMessageSegment contact:
+                result["type"] = "contact";
+                result["data"] = new JObject
+                {
+                    ["type"] = contact.Target.IsUser() ? "qq" : "group",
+                    ["id"] = (contact.Target.IsUser()
+                        ? contact.Target.AsUser().Id
+                        : contact.Target.AsGroup().Id).ToString()
+                };
+                break;
+            
+            case ForwardedMessageSegment forwarded:
+                throw new NotSupportedException("Serialize a forwarded message is not supported");
+
+            default:
+                throw new Exception("Unexpected unknown segment when parsing message");
         }
 
         return result;

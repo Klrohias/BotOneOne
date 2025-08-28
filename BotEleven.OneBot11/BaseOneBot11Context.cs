@@ -1,36 +1,54 @@
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using BotEleven.OneBot11.Connectivity;
+using BotEleven.OneBot11.Internals;
 using BotEleven.OneBot11.Transfer.Packet;
-using BotEleven.OneBot11.Transfer.Dto;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BotEleven.OneBot11;
 
-public abstract class BaseOneBot11Context(IConnectionSource connectionSource, OneBot11Options? options)
-    : BotContext
+public abstract class BaseOneBot11Context : BotContext
 {
-    private readonly OneBot11Options _options = options ?? OneBot11Options.Default;
-    private readonly Dictionary<string, TaskCompletionSource<ActionResponsePacket>> _pendingRequests = [];
+    private readonly SnowflakeId _snowflakeId;
+    private readonly OneBot11Options _options;
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<ActionResponsePacket>> _pendingRequests = [];
+    private readonly IConnectionSource _connectionSource;
+    private readonly Lock _lock = new();
+    
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
+
+    protected BaseOneBot11Context(IConnectionSource connectionSource, OneBot11Options? options)
+    {
+        _connectionSource = connectionSource;
+        _options = options ?? OneBot11Options.Default;
+        _snowflakeId = new SnowflakeId(_options.WorkerId);
+    }
 
     public override bool IsOpened => _workerTask != null;
 
     public override void Open()
     {
-        if (_workerTask != null)
+        lock (_lock)
         {
-            return;
-        }
+            if (_workerTask != null)
+            {
+                return;
+            }
 
-        _workerTask = Receiver(_cancellationTokenSource.Token);
+            _workerTask = Receiver(_cancellationTokenSource.Token);
+        }
     }
 
     public override void Close()
     {
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
-        _workerTask = null;
+        lock (_lock)
+        {
+            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _workerTask = null;
+        }
     }
 
     private void HandleActionResponse(JToken packet)
@@ -42,7 +60,13 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
         }
 
         // handle packet by echo
-        if (_pendingRequests.TryGetValue(actionResponse.Echo, out var source))
+        if (!long.TryParse(actionResponse.Echo, out var echo))
+        {
+            // the action is not sent by BotEleven, drop
+            return;
+        }
+        
+        if (_pendingRequests.TryGetValue(echo, out var source))
         {
             source.TrySetResult(actionResponse);
         }
@@ -57,7 +81,7 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
             try
             {
                 // read next packet and parse
-                var jsonPacket = JToken.Parse(await connectionSource.ReceiveTextAsync(cancellationToken));
+                var jsonPacket = JToken.Parse(await _connectionSource.ReceiveTextAsync(cancellationToken));
                 var baseResponse = jsonPacket.ToObject<BaseIncomingPacket>();
 
                 if (baseResponse == null)
@@ -77,7 +101,7 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
             }
             catch (Exception exception)
             {
-                Utils.LogException(exception);
+                Logger.LogException(exception);
             }
         }
     }
@@ -85,16 +109,20 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
     private async ValueTask<ActionResponsePacket> InvokeActionInternal(ActionRequestPacket requestPacket,
         CancellationToken cancellationToken)
     {
-        var packetEcho = Guid.NewGuid().ToString();
-        requestPacket.Echo = packetEcho;
+        var packetEcho = _snowflakeId.Next();
+        requestPacket.Echo = packetEcho.ToString();
 
         // prepare for receive
         var taskCompletionSource = new TaskCompletionSource<ActionResponsePacket>();
-        _pendingRequests.Add(packetEcho, taskCompletionSource);
+        if (!_pendingRequests.TryAdd(packetEcho, taskCompletionSource))
+        {
+            throw new UnreachableException();
+        }
+        
         cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(), false);
 
         // send action packet
-        await connectionSource.SendTextAsync(
+        await _connectionSource.SendTextAsync(
             JsonConvert.SerializeObject(requestPacket), cancellationToken);
 
         try
@@ -109,7 +137,7 @@ public abstract class BaseOneBot11Context(IConnectionSource connectionSource, On
         }
         finally
         {
-            _pendingRequests.Remove(packetEcho);
+            _pendingRequests.Remove(packetEcho, out _);
         }
     }
 

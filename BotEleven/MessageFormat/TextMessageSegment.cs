@@ -1,21 +1,12 @@
 namespace BotEleven.MessageFormat;
 
-public class TextMessageSegment : MessageSegment<TextMessageSegment.Payload>
+public class TextMessageSegment(string content) : MessageSegment
 {
     public override string Type => "text";
+    public string Text { get; set; } = content;
 
     public override string ToString()
     {
-        return Data.Text;
-    }
-
-    public TextMessageSegment(string content)
-    {
-        Data = new Payload { Text = content };
-    }
-
-    public struct Payload
-    {
-        public string Text { get; set; }
+        return Text;
     }
 }

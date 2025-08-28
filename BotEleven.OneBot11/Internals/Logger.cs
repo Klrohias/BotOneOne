@@ -1,8 +1,8 @@
 using System.Globalization;
 
-namespace BotEleven.OneBot11;
+namespace BotEleven.OneBot11.Internals;
 
-internal static class Utils
+internal static class Logger
 {
     public static void LogException(Exception e)
     {

@@ -35,4 +35,79 @@ public class MilkyContext(string serverEndpoint, MilkyOptions? options = null) :
     {
         throw new NotImplementedException();
     }
+
+    public override Task<string> GetImage(FileId fileId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<string> GetRecord(FileId fileId, string format = "amr")
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task FeedbackGroupRequest(FeedbackId feedbackId, bool approve = false, string? comment = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task FeedbackFriendRequest(FeedbackId feedbackId, bool approve = false)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task LeaveGroup(ChatId group)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task RenameGroup(ChatId group, string newGroupName)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task SetGroupMute(ChatId group, ChatId user, int time = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task SetGroupMute(ChatId group, bool enable = false)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task GroupKick(ChatId group, ChatId user, bool blacklisted = false)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<ChatId> GetUserInfo(ChatId input)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<ChatId> GetGroupMemberInfo(ChatId group, ChatId user)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<ChatId> GetGroupInfo(ChatId group)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<IEnumerable<ChatId>> ListFriends()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<IEnumerable<ChatId>> ListGroups()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task<IEnumerable<ChatId>> ListGroupMembers(ChatId group)
+    {
+        throw new NotImplementedException();
+    }
 }

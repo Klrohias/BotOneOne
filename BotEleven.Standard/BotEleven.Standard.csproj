@@ -5,10 +5,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>BotEleven.Standard</RootNamespace>
+        <Description>A standard of protocols for BotEleven</Description>
+        <PackageProjectUrl>https://github.com/Klrohias/BotEleven</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BotEleven\BotEleven.csproj" />
     </ItemGroup>
-
 </Project>

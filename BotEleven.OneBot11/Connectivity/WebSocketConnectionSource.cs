@@ -24,29 +24,34 @@ public class WebSocketConnectionSource(string serverAddr, string? token = null, 
     
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
-    private bool _selfOpened;
+    private int _selfOpened;
 
-    public override bool IsOpen => _selfOpened && base.IsOpen;
+    public override bool IsOpen => _selfOpened == 1 && base.IsOpen;
 
     public void Open()
     {
-        if (Interlocked.CompareExchange(ref _selfOpened, true, false))
+        if (Interlocked.CompareExchange(ref _selfOpened, 1, 0) == 1)
         {
             return;
         }
 
-        _selfOpened = true;
+        _selfOpened = 1;
         _workerTask = Worker(_cancellationTokenSource.Token);
     }
 
     public async Task Close(CancellationToken cancellationToken = default)
     {
-        if (!Interlocked.CompareExchange(ref _selfOpened, false, true))
+        if (Interlocked.CompareExchange(ref _selfOpened, 0, 1) == 0)
         {
             return;
         }
         
+#if NET8_0_OR_GREATER
         await _cancellationTokenSource.CancelAsync();
+#else
+        _cancellationTokenSource.Cancel();
+#endif
+        
         _cancellationTokenSource = new CancellationTokenSource();
         
         await (Connection?.CloseAsync(WebSocketCloseStatus.NormalClosure, null, cancellationToken) ?? Task.CompletedTask);

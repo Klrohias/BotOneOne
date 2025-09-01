@@ -3,7 +3,7 @@ using BotEleven.Milky.Entities;
 
 namespace BotEleven.Milky;
 
-public class MilkyContext(string serverEndpoint, MilkyOptions? options = null) : BaseMilkyContext(serverEndpoint, options)
+public sealed class MilkyContext(string serverEndpoint, MilkyOptions? options = null) : BaseMilkyContext(serverEndpoint, options)
 {
     public override Task<MessageId> SendMessage(ChatId target, Message message)
     {

@@ -10,27 +10,27 @@ public abstract class BotContext
     /// <summary>
     /// 私聊消息事件，当收到私聊消息时被触发
     /// </summary>
-    public event EventHandler<DirectMessageEventArgs>? DirectMessageReceived;
+    public event EventHandler<DirectMessageEventArgs>? OnDirectMessageReceived;
 
     /// <summary>
     /// 群聊消息事件，当收到群消息时被触发
     /// </summary>
-    public event EventHandler<GroupMessageEventArgs>? GroupMessageReceived;
+    public event EventHandler<GroupMessageEventArgs>? OnGroupMessageReceived;
 
     /// <summary>
     /// 加群请求事件，当 Bot 作为群主或管理员时，若有加群请求则会被触发
     /// </summary>
-    public event EventHandler<GroupRequestEventArgs>? GroupEntranceReceived;
+    public event EventHandler<GroupRequestEventArgs>? OnGroupEntranceReceived;
 
     /// <summary>
     /// 邀请进群事件，当 Bot 被邀请进入某群时触发
     /// </summary>
-    public event EventHandler<GroupRequestEventArgs>? GroupInvitationReceived;
+    public event EventHandler<GroupRequestEventArgs>? OnGroupInvitationReceived;
 
     /// <summary>
     /// 添加好友事件，当有人向 Bot 发送好友请求时触发
     /// </summary>
-    public event EventHandler<FriendAddEventArgs>? FriendAddRequested;
+    public event EventHandler<FriendAddEventArgs>? OnFriendAddRequested;
 
     /// <summary>
     /// 发送聊天消息
@@ -161,26 +161,26 @@ public abstract class BotContext
 
     protected virtual void RaiseDirectMessageReceived(DirectMessageEventArgs eventArgs)
     {
-        DirectMessageReceived?.Invoke(this, eventArgs);
+        OnDirectMessageReceived?.Invoke(this, eventArgs);
     }
 
     protected virtual void RaiseGroupMessageReceived(GroupMessageEventArgs eventArgs)
     {
-        GroupMessageReceived?.Invoke(this, eventArgs);
+        OnGroupMessageReceived?.Invoke(this, eventArgs);
     }
 
     protected virtual void RaiseGroupEntranceReceived(GroupRequestEventArgs eventArgs)
     {
-        GroupEntranceReceived?.Invoke(this, eventArgs);
+        OnGroupEntranceReceived?.Invoke(this, eventArgs);
     }
 
     protected virtual void RaiseGroupInvitationReceived(GroupRequestEventArgs eventArgs)
     {
-        GroupInvitationReceived?.Invoke(this, eventArgs);
+        OnGroupInvitationReceived?.Invoke(this, eventArgs);
     }
 
     protected virtual void RaiseFriendAddRequested(FriendAddEventArgs eventArgs)
     {
-        FriendAddRequested?.Invoke(this, eventArgs);
+        OnFriendAddRequested?.Invoke(this, eventArgs);
     }
 }

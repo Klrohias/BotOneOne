@@ -73,7 +73,7 @@ public class WebSocketConnectionSource(string serverAddr, string? token = null, 
             {
                 Logger.LogException(e);
                 
-                if (ReconnectInterval == null)
+                if (!ReconnectInterval.HasValue)
                 {
                     return;
                 }

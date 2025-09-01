@@ -58,9 +58,6 @@ public sealed class OneBot11Context(IConnectionSource connectionSource, OneBot11
         return user.ToUser().AsChatId();
     }
 
-    /// <summary>
-    /// 获取完整的群成员信息
-    /// </summary>
     public override async Task<ChatId> GetGroupMemberInfo(ChatId group, ChatId user)
     {
         var groupId = group.AsGroup().Id;

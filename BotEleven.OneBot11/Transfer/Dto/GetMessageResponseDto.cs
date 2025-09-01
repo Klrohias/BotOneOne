@@ -7,5 +7,5 @@ public class GetMessageResponseDto
 {
     [JsonProperty("time")] public long Time { get; set; }
     [JsonProperty("sender")] public UserDto Sender { get; set; }
-    [JsonProperty("message")] public JArray Message { get; set; }
+    [JsonProperty("message")] public JArray Message { get; set; } = [];
 }

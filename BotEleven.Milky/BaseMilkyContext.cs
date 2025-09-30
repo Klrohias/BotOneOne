@@ -13,10 +13,7 @@ public abstract class BaseMilkyContext : BotContext
         _dialer = new Dialer(new Uri(serverEndpoint), options ?? MilkyOptions.Default, OnEventReceived);
     }
 
-    private void OnEventReceived(Event<JToken> obj)
-    {
-        // TODO
-    }
+    protected abstract void OnEventReceived(Event<JToken> rawEvent);
 
     public override bool IsOpened => _dialer.Opened;
     public override void Open()

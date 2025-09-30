@@ -26,13 +26,13 @@ public static class MessageSerializer
             }
             case "at":
             {
-                var target = segment["data"]?["qq"]?.ToObject<long>() 
+                var target = segment["data"]?["qq"]?.ToObject<long>()
                              ?? throw new NullReferenceException("Malformed at segment");
                 return new AtMessageSegment(User.Of(target).AsChatId());
             }
             case "reply":
             {
-                var target = segment["data"]?["id"]?.ToObject<long>() 
+                var target = segment["data"]?["id"]?.ToObject<long>()
                              ?? throw new NullReferenceException("Malformed reply segment");
                 return new ReplyMessageSegment(new MessageId(target));
             }
@@ -57,9 +57,9 @@ public static class MessageSerializer
             case "contact":
             {
                 var contactType = segment["data"]?["type"]?.ToString();
-                
+
                 var idString = segment["data"]?["id"]?.ToString()
-                                  ?? throw new NullReferenceException("Invalid contact target");
+                               ?? throw new NullReferenceException("Invalid contact target");
 
                 return new ContactMessageSegment(contactType switch
                 {
@@ -114,20 +114,20 @@ public static class MessageSerializer
                     ["text"] = text.Text
                 };
                 break;
-            
+
             case AtMessageSegment at:
                 if (!at.Target.IsUser())
                 {
-                    throw new Exception("Unexpected at target");    
+                    throw new Exception("Unexpected at target");
                 }
-                
+
                 result["type"] = "at";
                 result["data"] = new JObject
                 {
                     ["qq"] = at.Target.AsUser().Id
                 };
                 break;
-            
+
             case ReplyMessageSegment reply:
                 result["type"] = "reply";
                 result["data"] = new JObject
@@ -135,7 +135,7 @@ public static class MessageSerializer
                     ["id"] = reply.MessageId.AsTyped<long>().Target
                 };
                 break;
-            
+
             case ImageMessageSegment image:
                 result["type"] = "image";
                 result["data"] = new JObject
@@ -143,7 +143,7 @@ public static class MessageSerializer
                     ["file"] = ExtractFileId(image.File)
                 };
                 break;
-            
+
             case RecordingMessageSegment recording:
                 result["type"] = "record";
                 result["data"] = new JObject
@@ -151,7 +151,7 @@ public static class MessageSerializer
                     ["file"] = ExtractFileId(recording.File)
                 };
                 break;
-            
+
             case VideoMessageSegment video:
                 result["type"] = "video";
                 result["data"] = new JObject
@@ -159,7 +159,7 @@ public static class MessageSerializer
                     ["file"] = ExtractFileId(video.File)
                 };
                 break;
-            
+
             case ContactMessageSegment contact:
                 result["type"] = "contact";
                 result["data"] = new JObject
@@ -170,7 +170,23 @@ public static class MessageSerializer
                         : contact.Target.AsGroup().Id).ToString()
                 };
                 break;
+
+            case JsonMessageSegment json:
+                result["type"] = "json";
+                result["data"] = new JObject
+                {
+                    ["data"] = json.SerializedJson
+                };
+                break;
             
+            case XmlMessageSegment xml:
+                result["type"] = "xml";
+                result["data"] = new JObject
+                {
+                    ["data"] = xml.SerializedXml
+                };
+                break;
+
             case ForwardedMessageSegment forwarded:
                 throw new NotSupportedException("Serialize a forwarded message is not supported");
 
@@ -187,9 +203,9 @@ public static class MessageSerializer
 
         foreach (var segment in message.Segments)
         {
-           result.Add(SerializeSegment(segment));
+            result.Add(SerializeSegment(segment));
         }
-        
+
         return result;
     }
 }

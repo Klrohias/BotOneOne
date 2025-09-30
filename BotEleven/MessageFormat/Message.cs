@@ -2,7 +2,7 @@ namespace BotEleven.MessageFormat;
 
 public class Message
 {
-    public static Message Empty { get; } = new();
+    public static Message Empty => new();
 
     public List<MessageSegment> Segments { get; } = [];
 

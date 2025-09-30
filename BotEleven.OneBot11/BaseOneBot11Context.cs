@@ -54,7 +54,7 @@ public abstract class BaseOneBot11Context : BotContext
     private void HandleActionResponse(JToken packet)
     {
         var actionResponse = packet.ToObject<ActionResponsePacket>();
-        if (actionResponse?.Echo == null)
+        if (actionResponse == null || actionResponse.Echo == null)
         {
             return;
         }
@@ -65,8 +65,18 @@ public abstract class BaseOneBot11Context : BotContext
             // the action is not sent by BotEleven, drop
             return;
         }
+
+        if (!_pendingRequests.TryGetValue(echo, out var source))
+        {
+            return;
+        }
         
-        if (_pendingRequests.TryGetValue(echo, out var source))
+        if (actionResponse.Status.ToLower() == "failed")
+        {
+            // failed
+            source.TrySetException(new OneBot11ActionException(actionResponse.ReturnCode));
+        }
+        else
         {
             source.TrySetResult(actionResponse);
         }
@@ -116,7 +126,11 @@ public abstract class BaseOneBot11Context : BotContext
         var taskCompletionSource = new TaskCompletionSource<ActionResponsePacket>();
         if (!_pendingRequests.TryAdd(packetEcho, taskCompletionSource))
         {
+#if NET7_0_OR_GREATER
             throw new UnreachableException();
+#else
+            throw new Exception("This should never happen");
+#endif
         }
         
         cancellationToken.Register(() => taskCompletionSource.TrySetCanceled(), false);

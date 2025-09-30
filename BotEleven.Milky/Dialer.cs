@@ -1,12 +1,14 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Text;
 using BotEleven.Milky.Internals;
 using BotEleven.Milky.Transfer;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BotEleven.Milky;
 
-internal class Dialer(Uri endpoint, MilkyOptions options)
+internal class Dialer(Uri endpoint, MilkyOptions options, Action<Event<JToken>>? onEventReceived = null)
 {
     private readonly HttpClient _httpClient = new();
     private readonly Lock _lock = new();
@@ -14,6 +16,8 @@ internal class Dialer(Uri endpoint, MilkyOptions options)
     private ClientWebSocket _clientWebSocket = null!;
     private CancellationTokenSource _cancellationTokenSource = new();
     private Task? _workerTask;
+
+    public Action<Event<JToken>>? OnEventReceived { get; set; } = onEventReceived;
 
     private static readonly MediaTypeHeaderValue ActionMediaType = MediaTypeHeaderValue.Parse("application/json");
     
@@ -54,7 +58,12 @@ internal class Dialer(Uri endpoint, MilkyOptions options)
             catch (Exception e)
             {
                 Logger.LogException(e);
-                await Task.Delay(options.ReconnectInterval, cancellationToken);
+                if (!options.ReconnectInterval.HasValue)
+                {
+                    return;
+                }
+                
+                await Task.Delay(options.ReconnectInterval.Value, cancellationToken);
             }
         }
     }
@@ -63,10 +72,29 @@ internal class Dialer(Uri endpoint, MilkyOptions options)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            var packet = await ReceivePacket(cancellationToken);
+            var rawPacket = await ReceivePacket(cancellationToken);
             
-            // TODO
+            try
+            {
+                ReceiveEvent(rawPacket);
+            }
+            catch (Exception e)
+            {
+                Logger.LogException(e);
+            }
         }
+    }
+
+    private void ReceiveEvent(byte[] rawPacket)
+    {
+        var packetString = Encoding.Default.GetString(rawPacket);
+        var packet = JsonConvert.DeserializeObject<Event<JToken>>(packetString);
+        if (packet == null)
+        {
+            return;
+        }
+        
+        OnEventReceived?.Invoke(packet);
     }
 
     private async ValueTask<byte[]> ReceivePacket(CancellationToken cancellationToken)

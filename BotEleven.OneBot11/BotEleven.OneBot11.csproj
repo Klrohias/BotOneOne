@@ -3,13 +3,17 @@
     <PropertyGroup>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <TargetFramework>net9.0</TargetFramework>
         <Authors>Klrohias</Authors>
         <PackageProjectUrl>https://github.com/Klrohias/BotEleven</PackageProjectUrl>
         <Description>OneBot 11 Protocol supports for BotEleven</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <LangVersion>13.0</LangVersion>
+        <TargetFrameworks>net9.0;net7.0;net8.0;netstandard2.1</TargetFrameworks>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -18,7 +22,15 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Backport.System.Threading.Lock" Version="3.1.4" Condition="'$(TargetFramework)' == 'netstandard2.1' OR
+         '$(TargetFramework)' == 'net8.0' OR
+         '$(TargetFramework)' == 'net7.0'" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+      <PackageReference Include="PolySharp" Version="1.15.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="System.Threading.Tasks.Dataflow" Version="9.0.8" Condition="'$(TargetFramework)' == 'netstandard2.1'" />
     </ItemGroup>
 
 </Project>

@@ -1,9 +1,11 @@
 ﻿using BotEleven.MessageFormat;
 using BotEleven.Milky.Entities;
+using BotEleven.Milky.Transfer;
+using Newtonsoft.Json.Linq;
 
 namespace BotEleven.Milky;
 
-public class MilkyContext(string serverEndpoint, MilkyOptions? options = null) : BaseMilkyContext(serverEndpoint, options)
+public sealed class MilkyContext(string serverEndpoint, MilkyOptions? options = null) : BaseMilkyContext(serverEndpoint, options)
 {
     public override Task<MessageId> SendMessage(ChatId target, Message message)
     {
@@ -109,5 +111,20 @@ public class MilkyContext(string serverEndpoint, MilkyOptions? options = null) :
     public override Task<IEnumerable<ChatId>> ListGroupMembers(ChatId group)
     {
         throw new NotImplementedException();
+    }
+
+    protected override void OnEventReceived(Event<JToken> rawEvent)
+    {
+        switch (rawEvent.EventType)
+        {
+            case "message_receive":
+                HandleMessageReceive(rawEvent);
+                break;
+        }
+    }
+
+    private void HandleMessageReceive(Event<JToken> rawEvent)
+    {
+        
     }
 }

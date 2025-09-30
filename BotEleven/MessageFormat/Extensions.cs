@@ -78,4 +78,26 @@ public static class Extensions
         message.Append(new ContactMessageSegment(contact));
         return message;
     }
+    
+    /// <summary>
+    /// 拼接一个 Json 消息段
+    /// </summary>
+    /// <param name="message">消息</param>
+    /// <param name="serializedJson">Json 内容</param>
+    public static Message Json(this Message message, string serializedJson)
+    {
+        message.Append(new JsonMessageSegment(serializedJson));
+        return message;
+    }
+    
+    /// <summary>
+    /// 拼接一个 Xml 消息段
+    /// </summary>
+    /// <param name="message">消息</param>
+    /// <param name="serializedXml">Xml 内容</param>
+    public static Message Xml(this Message message, string serializedXml)
+    {
+        message.Append(new XmlMessageSegment(serializedXml));
+        return message;
+    }
 }

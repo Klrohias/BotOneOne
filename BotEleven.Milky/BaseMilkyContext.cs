@@ -1,11 +1,19 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using BotEleven.Milky.Transfer;
+using Newtonsoft.Json.Linq;
 
 namespace BotEleven.Milky;
 
-public abstract class BaseMilkyContext(string serverEndpoint, MilkyOptions? options = null) : BotContext
+public abstract class BaseMilkyContext : BotContext
 {
-    private readonly Dialer _dialer = new(new Uri(serverEndpoint), options ?? MilkyOptions.Default);
+    private readonly Dialer _dialer;
+
+    protected BaseMilkyContext(string serverEndpoint, MilkyOptions? options = null)
+    {
+        _dialer = new Dialer(new Uri(serverEndpoint), options ?? MilkyOptions.Default, OnEventReceived);
+    }
+
+    protected abstract void OnEventReceived(Event<JToken> rawEvent);
 
     public override bool IsOpened => _dialer.Opened;
     public override void Open()

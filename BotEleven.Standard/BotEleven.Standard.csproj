@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>BotEleven.Standard</RootNamespace>
@@ -10,9 +9,22 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <LangVersion>13.0</LangVersion>
+        <TargetFrameworks>net9.0;net7.0;net8.0;netstandard2.1</TargetFrameworks>
+        <Version>1.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\BotEleven\BotEleven.csproj" />
+        
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="PolySharp" Version="1.15.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
     </ItemGroup>
 </Project>
